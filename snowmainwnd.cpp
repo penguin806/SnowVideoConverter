@@ -5,6 +5,7 @@
 #include <QProcess>
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QDateTime>
 
 SnowMainWnd::SnowMainWnd(QWidget *parent) :
     QMainWindow(parent),
@@ -15,10 +16,19 @@ SnowMainWnd::SnowMainWnd(QWidget *parent) :
     this->ui->lineEdit_2_OutputPath->installEventFilter(this);
 
     this->ffmpegPath = qApp->applicationDirPath() + "/ffmpeg-4.1.3-win64-static/bin/ffmpeg.exe";
+    this->logFile = new QFile(qApp->applicationDirPath() + "/log_" +
+                              QDateTime::currentDateTime().toString().replace(' ','_').replace(':','_') + ".log");
+    bool bResult = this->logFile->open(QFile::WriteOnly);
+
+    qDebug() << this->logFile->fileName() << bResult;
+
+    this->logFileStream = new QTextStream(this->logFile);
 }
 
 SnowMainWnd::~SnowMainWnd()
 {
+    delete this->logFileStream;
+    delete this->logFile;
     delete ui;
 }
 
@@ -110,7 +120,8 @@ void SnowMainWnd::on_pushButton_StartConvert_clicked()
         }
     }
 
-    qDebug() << this->ffmpegPath;
+    //qDebug() << this->ffmpegPath;
+    *(this->logFileStream) << QString("this->ffmpegProcess->start(") + this->ffmpegPath + ")" << "\r\n";
     this->ffmpegProcess->start(this->ffmpegPath);
 }
 
@@ -121,14 +132,16 @@ void SnowMainWnd::ffmpegProcessStarted()
 
 void SnowMainWnd::ffmpegReadyReadStandardError()
 {
-    //qDebug() << this->ffmpegProcess->readAllStandardError();
-    this->ui->textEdit_Info->append(this->ffmpegProcess->readAllStandardError());
+    QString outputText = this->ffmpegProcess->readAllStandardError();
+    this->ui->textEdit_Info->append(outputText);
+    *(this->logFileStream) << outputText;
 }
 
 void SnowMainWnd::ffmpegReadyReadStandardOutput()
 {
-    this->ui->textEdit_Info->append(this->ffmpegProcess->readAllStandardOutput());
-//    qDebug() << this->ffmpegProcess->readAllStandardOutput();
+    QString outputText = this->ffmpegProcess->readAllStandardOutput();
+    this->ui->textEdit_Info->append(outputText);
+    *(this->logFileStream) << outputText;
 }
 
 void SnowMainWnd::ffmpegFinished(int exitCode)
@@ -169,7 +182,8 @@ void SnowMainWnd::ffmpegFinished(int exitCode)
                        << "-movflags" << "+faststart" << "-n"
                        << this->outputDir + '/' + videoFileInfo.baseName()+".mp4";
 
-            qDebug() << this->ffmpegPath << ffmpegArgs;
+            //qDebug() << this->ffmpegPath << ffmpegArgs;
+            *(this->logFileStream) << "this->ffmpegProcess->start(" << this->ffmpegPath << ", " << ffmpegArgs.join(' ') << ")"  << "\r\n";
             this->ffmpegProcess->start(this->ffmpegPath, ffmpegArgs);
             return;
         }

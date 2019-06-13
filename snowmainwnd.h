@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QProcess>
+#include <QFile>
+#include <QTextStream>
 
 namespace Ui {
 class SnowMainWnd;
@@ -33,6 +35,8 @@ private:
     QString ffmpegPath;
 
     QString outputDir;
+    QFile *logFile;
+    QTextStream *logFileStream;
 };
 
 #endif // SNOWMAINWND_H
