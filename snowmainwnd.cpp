@@ -167,7 +167,7 @@ void SnowMainWnd::ffmpegFinished(int exitCode)
     int tableRowCount = this->ui->tableWidget_FileTable->rowCount();
     for(int i=0; i<tableRowCount; i++)
     {
-        if(this->ui->tableWidget_FileTable->itemAt(i,0)->text() == QString("Ready"))
+        if(this->ui->tableWidget_FileTable->item(i,0)->text() == QString("Ready"))
         {
             this->filesToBeConvertedTotal--;
             this->currentConvertingFile = i;
